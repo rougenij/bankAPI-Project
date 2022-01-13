@@ -22,6 +22,26 @@ const savedUsers = (users) => {
   fs.writeFileSync("users.json", dataJSON);
 };
 
+//gets all users
+app.get("/users", (req, res) => {
+  const users = loadUsers();
+  if (users) {
+    res.status(200).send(users);
+  } else {
+    res.send("No Users in users.json");
+  }
+});
+
+//gets specific user
+app.get("/users/:id", (req, res) => {
+  const users = loadUsers();
+  const id = req.params.id;
+  const selectedUser = users.find((user) => user.id === id);
+  if (!selectedUser) return res.status(400).send("User not found");
+  res.send(selectedUser);
+});
+
+//adds new user
 app.post("/users", (req, res) => {
   const users = loadUsers();
   const duplicateUser = users.find((user) => user.id === req.body.id);
