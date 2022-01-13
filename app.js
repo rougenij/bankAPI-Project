@@ -60,6 +60,18 @@ app.post("/users", (req, res) => {
   savedUsers(users);
 });
 
+app.put("/users/deposit/:id", (req, res) => {
+  const users = loadUsers();
+  const id = req.params.id;
+  const selectedUser = users.find((user) => user.id == id);
+  if (!selectedUser) return res.status(400).send("User not found");
+  const cash = req.body.cash;
+  selectedUser.cash += cash;
+  res.send(selectedUser);
+  savedUsers(users);
+});
+
+//Withdraw money from user
 app.put("/users/withdraw/:id", (req, res) => {
   const users = loadUsers();
   const id = req.params.id;
@@ -83,7 +95,7 @@ app.put("/users/withdraw/:id", (req, res) => {
     savedUsers(users);
   }
 });
-
+//transfer
 app.put("/users/transfer/", (req, res) => {
   const users = loadUsers();
   const transferID = req.body.transferID;
