@@ -9,8 +9,7 @@ app.use(express.json());
 
 const loadUsers = () => {
   try {
-    const dataBuffer = fs.readFileSync("users.json");
-    const data = dataBuffer.toString();
+    const data = fs.readFileSync("users.json", "utf-8");
     return JSON.parse(data);
   } catch (e) {
     return [];
@@ -58,6 +57,50 @@ app.post("/users", (req, res) => {
   };
   users.push(user);
   res.status(201).send(user);
+  savedUsers(users);
+});
+
+app.put("/users/withdraw/:id", (req, res) => {
+  const users = loadUsers();
+  const id = req.params.id;
+  const selectedUser = users.find((user) => user.id == id);
+  if (!selectedUser) return res.status(400).send("User not found");
+  if (Math.abs(selectedUser.cash) === selectedUser.credit) {
+    return res.status(400).send("Cannot withdraw anymore");
+  }
+  if (req.body.sumToWithdraw < selectedUser.cash) {
+    selectedUser.cash -= req.body.sumToWithdraw;
+    res.send(selectedUser);
+    savedUsers(users);
+  }
+  if (req.body.sumToWithdraw > selectedUser.cash + selectedUser.credit) {
+    return res
+      .status(400)
+      .send("Hey.. what you trying to do?? Cannot withdraw more");
+  } else {
+    selectedUser.cash -= req.body.sumToWithdraw;
+    res.send(selectedUser);
+    savedUsers(users);
+  }
+});
+
+app.put("/users/transfer/", (req, res) => {
+  const users = loadUsers();
+  const transferID = req.body.transferID;
+  const cash = req.body.cash;
+  const recieverID = req.body.recieverID;
+  const transferUser = users.find((user) => user.id == transferID);
+  const recieverUser = users.find((user) => user.id == recieverID);
+  if (!transferUser || !recieverUser)
+    return res.status(400).send("User not found");
+  transferUser.cash -= cash;
+  recieverUser.cash += cash;
+  res.send({
+    transMsg: "Transfer User new Balance",
+    transUser: transferUser,
+    recivMsg: "Reciever User new Balance",
+    recivUser: recieverUser,
+  });
   savedUsers(users);
 });
 
